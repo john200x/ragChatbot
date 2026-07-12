@@ -1,0 +1,2 @@
+A simple demo Retrieval Augmented Generative (RAG) AI application for internal employee to ask about any documents such as health benefits, employee code of conduct, expense claim guide for employee to ask in natural language. The chatbot runs in AWS S3 and in term it will send a request to API gateway which exposes a lambda function to query bedrock knowledgebase.
+An equivalent demo is built for the same RAG AI application to be protected by Zscaler AI Guard by sending an API request to AI Guard prior to sending the sanctioned prompts to LLM.
