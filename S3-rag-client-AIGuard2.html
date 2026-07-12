@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Employee Chatbot (AI Guard)</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 2rem auto; }
+    textarea { width: 100%; height: 120px; }
+    pre { white-space: pre-wrap; background: #f6f6f6; padding: 1rem; }
+    button { margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Employee Chatbot (protected by AI Guard)</h1>
+
+  <h3>Ask a question</h3>
+  <textarea id="question" placeholder="Ask quesions about insurance benefits, travel bookings, payroll, expense claims, IT support, internal job opporunities, new employee onboarding and company news"></textarea>
+  <br />
+  <button id="ask-btn">Ask</button>
+
+  <h3>Answer</h3>
+  <pre id="answer"></pre>
+
+  <script>
+    const API_URL = "https://7t02e4edxl.execute-api.us-east-1.amazonaws.com/rag";
+
+    async function callApi(question) {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: question })
+      });
+
+      // Try to parse JSON error bodies (like {"answer":"Request blocked..."}) even on 403
+      const raw = await res.text();
+      let payload = null;
+      try { payload = raw ? JSON.parse(raw) : null; } catch (_) {}
+
+      if (!res.ok) {
+        // Show ONLY the message (prefer "answer", then common fields, then generic)
+        const msg =
+          (payload && (payload.answer || payload.message || payload.error)) ||
+          raw || // fallback if API returns plain text
+          `Request failed (${res.status})`;
+
+        throw new Error(msg);
+      }
+
+      return payload ?? (raw ? JSON.parse(raw) : {});
+    }
+
+    document.getElementById("ask-btn").onclick = async () => {
+      const q = document.getElementById("question").value.trim();
+      if (!q) return;
+
+      const out = document.getElementById("answer");
+      out.textContent = "Thinking...";
+
+      try {
+        const data = await callApi(q);
+        out.textContent = data.answer || JSON.stringify(data, null, 2);
+      } catch (e) {
+        // Display ONLY the error message (no "Error: API error 403: ...")
+        out.textContent = e?.message || String(e);
+      }
+    };
+  </script>
+</body>
+</html>
